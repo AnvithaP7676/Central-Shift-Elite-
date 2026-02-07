@@ -1,87 +1,62 @@
-from flask import Flask, request, jsonify, send_from_directory
+from flask import Flask, render_template, request
 
 app = Flask(__name__)
 
-def estimate_car(car_name):
-    name = car_name.lower()
+def co2_per_km(fuel):
+    mapping = {
+        "Petrol": 180,
+        "Diesel": 150,
+        "Hybrid": 90,
+        "Electric": 0
+    }
+    return mapping.get(fuel, 160)
 
-    if any(x in name for x in ["tesla", "ev", "electric"]):
-        return "Electric", 0
-
-    if "hybrid" in name:
-        return "Hybrid", 60
-
-    if "diesel" in name:
-        return "Diesel", 140
-
-
-    return "Petrol", 180
-
-
-def score_car(fuel, co2):
-    score = 100
-
-    if fuel == "Electric":
-        score -= 0
-    elif fuel == "Hybrid":
-        score -= 25
-    elif fuel == "Petrol":
-        score -= 45
-    elif fuel == "Diesel":
-        score -= 55
-
-    score -= co2 // 4
-    return max(0, min(100, score))
+def estimate_daily_co2(fuel, hours, avg_speed=40):
+    km_driven = hours * avg_speed  # Assuming avg speed of 40 km/h
+    co2 = co2_per_km(fuel) * km_driven
+    return round(co2, 1)
 
 
-def rating_and_reason(score):
-    if score >= 66:
-        return (
-            "Green",
-            "This car has low emissions and better efficiency, making it environmentally friendly."
-        )
-    elif score >= 50:
-        return (
-            "Yellow",
-            "This car has moderate emissions. It is acceptable but not fully sustainable."
-        )
+def calculate_score(co2):
+    if co2 == 0:
+        return 95
+    score = 100 - (co2 / 50)  # Lower CO₂ → higher score
+    return max(10, min(95, int(score)))
+
+def color_index(score):
+    if score <= 49:
+        return "red", "High CO₂ impact"
+    elif score <= 65:
+        return "yellow", "Moderate CO₂ impact"
     else:
-        return (
-            "Red",
-            "This car produces high emissions and has a strong negative impact on the environment."
-        )
+        return "green", "Low CO₂ impact"
 
 
-@app.route("/")
+@app.route("/", methods=["GET", "POST"])
 def home():
-    return send_from_directory(".", "index.html")
+    result = None
 
+    if request.method == "POST":
+        brand = request.form["brand"].strip()
+        fuel = request.form["fuel"]
+        hours = float(request.form["hours"])
 
-@app.route("/analyze", methods=["POST"])
-def analyze():
-    data = request.get_json()
-    car = data.get("car", "").strip()
+        co2 = estimate_daily_co2(fuel, hours)
+        score = calculate_score(co2)
+        color, explanation = color_index(score)
 
-    if car == "":
-        return jsonify({"error": "No car name entered"}), 400
+        result = {
+            "brand": brand,
+            "fuel": fuel,
+            "hours": hours,
+            "co2": co2,
+            "score": score,
+            "color": color,
+            "explanation": explanation,
+            "source": "Estimated from driving habits"
+        }
 
-    fuel, co2 = estimate_car(car)
-    score = score_car(fuel, co2)
-    rating, reason = rating_and_reason(score)
-
-    return jsonify({
-        "app": "SustainX",
-        "car": car.title(),
-        "fuel": fuel,
-        "co2": co2,
-        "score": score,
-        "rating": rating,
-        "reason": reason
-    })
-
+    return render_template("index.html", result=result)
 
 if __name__ == "__main__":
     app.run(debug=True)
-
-
-
