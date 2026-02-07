@@ -1,0 +1,15 @@
+make,model,fuel_type,co2_g_km
+Hyundai,Creta,Petrol,140
+Hyundai,Elantra,Petrol,132
+Mahindra,Thar,Diesel,171
+Mahindra,XUV700,Diesel,159
+BMW,320d,Diesel,135
+BMW,X5,Petrol,182
+Mercedes,C200,Petrol,154
+Mercedes,E220d,Diesel,143
+Chevrolet,Corvette,Petrol,248
+Toyota,Corolla,Petrol,120
+Toyota,Prius,Hybrid,75
+Tesla,Model 3,Electric,0
+Audi,A4,Petrol,149
+Honda,Civic,Petrol,124
