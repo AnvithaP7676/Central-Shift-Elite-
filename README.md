@@ -1,59 +1,84 @@
-from flask import Flask, request, jsonify
+<!DOCTYPE html>
+<html>
+<head>
+  <title>SustainX</title>
+  <style>
+    body {
+      font-family: Arial;
+      background: #0f172a;
+      color: white;
+      display: flex;
+      justify-content: center;
+      align-items: center;
+      height: 100vh;
+      margin: 0;
+    }
+    .card {
+      background: #020617;
+      padding: 30px;
+      border-radius: 12px;
+      width: 350px;
+      text-align: center;
+      box-shadow: 0 0 20px rgba(0,0,0,0.5);
+    }
+    input {
+      width: 100%;
+      padding: 10px;
+      border-radius: 6px;
+      border: none;
+      margin-bottom: 10px;
+    }
+    button {
+      width: 100%;
+      padding: 10px;
+      background: #22c55e;
+      border: none;
+      border-radius: 6px;
+      font-size: 16px;
+      cursor: pointer;
+    }
+    button:hover {
+      background: #16a34a;
+    }
+    .result {
+      margin-top: 15px;
+      font-size: 15px;
+    }
+  </style>
+</head>
 
-app = Flask(__name__)
+<body>
+  <div class="card">
+    <h2>SustainX</h2>
+    <p>Enter any car name</p>
 
-# Simple car data
-CARS = {
-    "tesla model 3": {"fuel": "Electric", "co2": 0},
-    "toyota prius": {"fuel": "Hybrid", "co2": 70},
-    "toyota corolla": {"fuel": "Petrol", "co2": 120}
+    <input id="carName" placeholder="e.g. Tesla Model Z">
+    <button onclick="checkCar()">Check Sustainability</button>
+
+    <div class="result" id="result"></div>
+  </div>
+
+<script>
+function checkCar() {
+  const car = document.getElementById("carName").value;
+
+  fetch("/analyze", {
+    method: "POST",
+    headers: {"Content-Type": "application/json"},
+    body: JSON.stringify({car: car})
+  })
+  .then(res => res.json())
+  .then(data => {
+    document.getElementById("result").innerHTML = `
+      <p><b>Car:</b> ${data.car}</p>
+      <p><b>Fuel:</b> ${data.fuel}</p>
+      <p><b>CO₂:</b> ${data.co2} g/km</p>
+      <p><b>Score:</b> ${data.score}/100</p>
+      <p><b>Rating:</b> ${data.rating}</p>
+    `;
+  });
 }
+</script>
+</body>
+</html>
 
-def sustainability_score(fuel, co2):
-    score = 0
-    if fuel == "Electric":
-        score += 50
-    elif fuel == "Hybrid":
-        score += 30
-    else:
-        score += 10
-
-    if co2 == 0:
-        score += 30
-    elif co2 < 80:
-        score += 20
-    else:
-        score += 10
-
-    return score
-
-@app.route("/car")
-def car():
-    name = request.args.get("name", "").lower()
-
-    if name in CARS:
-        fuel = CARS[name]["fuel"]
-        co2 = CARS[name]["co2"]
-    else:
-        fuel = "Petrol"
-        co2 = 150
-
-    score = sustainability_score(fuel, co2)
-
-    if score >= 70:
-        color = "Green"
-    elif score >= 40:
-        color = "Yellow"
-    else:
-        color = "Red"
-
-    return jsonify({
-        "car": name,
-        "fuel_type": fuel,
-        "co2_emissions": co2,
-        "sustainability_score": score,
-        "rating": color
-    })
-
-if __name__ == "__main__":
-    app.run(debug=True)
