@@ -62,13 +62,25 @@
 function checkCar() {
   const car = document.getElementById("carName").value;
 
+  if (car.trim() === "") {
+    document.getElementById("result").innerText = "Please enter a car name";
+    return;
+  }
+
   fetch("/analyze", {
     method: "POST",
-    headers: {"Content-Type": "application/json"},
-    body: JSON.stringify({car: car})
+    headers: {
+      "Content-Type": "application/json"
+    },
+    body: JSON.stringify({ car: car })
   })
-  .then(res => res.json())
+  .then(response => response.json())
   .then(data => {
+    if (data.error) {
+      document.getElementById("result").innerText = data.error;
+      return;
+    }
+
     document.getElementById("result").innerHTML = `
       <p><b>Car:</b> ${data.car}</p>
       <p><b>Fuel:</b> ${data.fuel}</p>
@@ -76,6 +88,10 @@ function checkCar() {
       <p><b>Score:</b> ${data.score}/100</p>
       <p><b>Rating:</b> ${data.rating}</p>
     `;
+  })
+  .catch(err => {
+    document.getElementById("result").innerText = "Error connecting to server";
+    console.error(err);
   });
 }
 </script>
