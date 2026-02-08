@@ -12,7 +12,8 @@ def co2_per_km(fuel):
     return mapping.get(fuel, 160)
 
 def estimate_daily_co2(fuel, hours, avg_speed=40):
-    km_driven = hours * avg_speed  # Assuming avg speed of 40 km/h
+    km_driven = hours * avg_speed  
+
     co2 = co2_per_km(fuel) * km_driven
     return round(co2, 1)
 
